@@ -127,6 +127,7 @@
             const pdfHeight = showReport ? viewportHeight - topElementsHeight : viewportHeight; // Calculated height for PDF report display
             const reportWidth = currentReports.length > 0 ? '35%' : '60%'; // Calculate width for PDF report display
 
+            {/* Search Bar */}
             // Handler to adjust the height of the textarea based on content
             const maxTextAreaHeight = 400; // Maximum height for the textarea, equivalent to 20 lines of text
             const adjustTextAreaHeight = () => {
@@ -178,130 +179,6 @@
                 }
             };
 
-
-            // Clear response text
-            const handleClearResponse = () => setResponse("");
-
-            React.useEffect(() => {
-                // Adjust textarea height after response is rendered
-                const timer = setTimeout(() => {
-                    adjustTextAreaHeight();
-                }, 0); // Execute in the next render cycle
-                return () => clearTimeout(timer);
-            }, [response]);
-
-
-
-            // Data definitions for sectors, utilities, and report mappings
-            const energySectors = [
-                "Coking Coal", "Natural Gas", "Oil & Gas Drilling", "Oil & Gas E&P",
-                "Oil & Gas Equipment & Services", "Oil & Gas Integrated", "Oil & Gas Midstream",
-                "Oil & Gas Refining & Marketing", "Shale Oil", "Thermal Coal"
-            ];
-            const utilities = [
-                "Nuclear Power", "Solar", "Utilities - Diversified", "Utilities - Independent Power Producers",
-                "Utilities - Regulated Electric", "Utilities - Regulated Gas", "Utilities - Regulated Water",
-                "Utilities - Renewable", "Wind Power", "Hydrogen Energy"
-            ];
-            const reportMappings = {
-                'sectorSentiment': 'https://app.powerbi.com/reportEmbed?reportId=ceaf0317-b619-43fa-9e74-9a1874071a20&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
-                'nationwideEnergy': 'https://app.powerbi.com/reportEmbed?reportId=65e93b5e-eba2-4241-b481-050dda341dba&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
-                'nationwideUtil': 'https://app.powerbi.com/reportEmbed?reportId=4b986cd7-ddc9-405a-aa4f-838ec7f9231c&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
-                'provincesEnergyMap': 'https://app.powerbi.com/reportEmbed?reportId=6c08c9dc-1138-4a67-aa3f-db153bb2f2b7&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
-                'provincesUtilMap': 'https://app.powerbi.com/reportEmbed?reportId=c9f9017e-6d50-4d60-8a74-0a3f15d51e40&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
-            };
-            // Styling for different types of reports
-            const reportStyles = {
-                'sectorSentiment': 'sentiment-report',
-                'nationwideEnergy': 'three-energy-report',
-                'nationwideUtil': 'util-report',
-                'provincesEnergyMap': 'three-energy-map-report',
-                'provincesUtilMap': 'UtilMap-report',
-            };
-
-
-
-            // Handler to toggle the visibility of the PDF report
-            const handleReportButtonClick = () => {
-                setShowReport(!showReport); // Toggle showReport state
-            };
-
-
-            // Effects for dynamic adjustments and data updates
-            React.useEffect(() => {
-                if (selectedButtons.includes('nationwide') || selectedButtons.includes('provinces')) {
-                    updateReports(selectedButtons);
-                }
-            }, [sector]);
-
-
-            // Handles click events on buttons to manage their selection state and associated reports.
-            const handleButtonClick = (buttonName) => {
-                // Determine if the button is currently selected
-                const isSelected = selectedButtons.includes(buttonName);
-
-                // Create copies of the current states to modify
-                let newSelectedButtons = [...selectedButtons];
-                let newCurrentReports = [...currentReports];
-                let newCurrentReportTypes = [...currentReportTypes];
-
-                if (isSelected) {
-                    // If the button is already selected, remove it and its associated reports
-                    newSelectedButtons = newSelectedButtons.filter(item => item !== buttonName);
-                    newCurrentReports = newCurrentReports.filter((_, index) => newCurrentReportTypes[index] !== buttonName);
-                    newCurrentReportTypes = newCurrentReportTypes.filter(type => type !== buttonName);
-                } else {
-                    // If the button is not selected, add it to the selection
-                    newSelectedButtons.push(buttonName);
-                }
-
-                // Update the state with the new set of selected buttons
-                setSelectedButtons(newSelectedButtons);
-                // Call function to update reports based on the new selection,
-                // ensuring correct handling when buttons are added or removed
-                updateReports(newSelectedButtons);
-            };
-
-
-
-
-            // Function to update reports based on the currently selected buttons and the domain.
-            const updateReports = (selectedButtons) => {
-                let newCurrentReports = [];
-                let newCurrentReportTypes = [];
-
-                selectedButtons.forEach(button => {
-                    let reportType;
-
-                    // Decide which nationwide report to display based on the selected sector.
-                    if (button === 'nationwide') {
-                        reportType = energySectors.includes(sector) ? 'nationwideEnergy' : 'nationwideUtil';
-                    }
-                    // For the 'provinces' button, the logic is similar but for different maps.
-                    else if (button === 'provinces') {
-                        reportType = energySectors.includes(sector) ? 'provincesEnergyMap' : 'provincesUtilMap';
-                    }
-                    // For the 'sectorSentiment' button, there is no need to differentiate.
-                    else {
-                        reportType = 'sectorSentiment';
-                    }
-
-                    // Retrieve the report URL using the determined report type.
-                    const reportUrl = reportMappings[reportType];
-                    if (reportUrl) {
-                        newCurrentReports.push(reportUrl);
-                        newCurrentReportTypes.push(reportType);
-                    }
-                });
-
-                // Update state with the new reports and report types.
-                setCurrentReports(newCurrentReports);
-                setCurrentReportTypes(newCurrentReportTypes);
-            };
-
-
-
-
             // Start indicator for processing requests
             const startProcessingIndicator = () => {
                 let dots = 0;
@@ -312,6 +189,9 @@
                     dots++;
                 }, 500);
             };
+
+            // Clear response text
+            const handleClearResponse = () => setResponse("");
 
             // Simulate typing effect for responses
             const simulateTypingEffect = (fullResponse, callback) => {
@@ -329,7 +209,6 @@
                 };
                 typeNextChars();
             };
-
 
             // Function to handle submissions and simulate typing with a dynamic processing indicator.
             const handleAsk = async () => {
@@ -386,7 +265,6 @@
                 }
             };
 
-
             const handlePaste = (e) => {
                 e.preventDefault();
                 const items = (e.clipboardData || window.clipboardData).items;
@@ -424,7 +302,6 @@
                 }
             };
 
-
             // Handle image drop
             const handleDrop = (e) => {
                 e.preventDefault();
@@ -440,7 +317,6 @@
                     }
                 }
             };
-
 
             const handleKeyDown = (e) => {
                 // Handle key events for 'Enter' and deletion keys
@@ -458,8 +334,6 @@
                 }
             };
 
-
-
             const insertNewLineAtCursor = () => {
                 // Insert a new line at the cursor position within an editable content area
                 const selection = window.getSelection();
@@ -474,6 +348,117 @@
                 selection.addRange(range);
             };
 
+            React.useEffect(() => {
+                // Adjust textarea height after response is rendered
+                const timer = setTimeout(() => {
+                    adjustTextAreaHeight();
+                }, 0); // Execute in the next render cycle
+                return () => clearTimeout(timer);
+            }, [response]);
+
+            {/* Power BI & Reports */}
+            // Data definitions for sectors, utilities, and report mappings
+            const energySectors = [
+                "Coking Coal", "Natural Gas", "Oil & Gas Drilling", "Oil & Gas E&P",
+                "Oil & Gas Equipment & Services", "Oil & Gas Integrated", "Oil & Gas Midstream",
+                "Oil & Gas Refining & Marketing", "Shale Oil", "Thermal Coal"
+            ];
+
+            const utilities = [
+                "Nuclear Power", "Solar", "Utilities - Diversified", "Utilities - Independent Power Producers",
+                "Utilities - Regulated Electric", "Utilities - Regulated Gas", "Utilities - Regulated Water",
+                "Utilities - Renewable", "Wind Power", "Hydrogen Energy"
+            ];
+
+            const reportMappings = {
+                'sectorSentiment': 'https://app.powerbi.com/reportEmbed?reportId=ceaf0317-b619-43fa-9e74-9a1874071a20&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'nationwideEnergy': 'https://app.powerbi.com/reportEmbed?reportId=65e93b5e-eba2-4241-b481-050dda341dba&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'nationwideUtil': 'https://app.powerbi.com/reportEmbed?reportId=4b986cd7-ddc9-405a-aa4f-838ec7f9231c&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'provincesEnergyMap': 'https://app.powerbi.com/reportEmbed?reportId=6c08c9dc-1138-4a67-aa3f-db153bb2f2b7&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'provincesUtilMap': 'https://app.powerbi.com/reportEmbed?reportId=c9f9017e-6d50-4d60-8a74-0a3f15d51e40&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+            };
+
+            // Styling for different types of reports
+            const reportStyles = {
+                'sectorSentiment': 'sentiment-report',
+                'nationwideEnergy': 'three-energy-report',
+                'nationwideUtil': 'util-report',
+                'provincesEnergyMap': 'three-energy-map-report',
+                'provincesUtilMap': 'UtilMap-report',
+            };
+
+            // Effects for dynamic adjustments and data updates
+            React.useEffect(() => {
+                if (selectedButtons.includes('nationwide') || selectedButtons.includes('provinces')) {
+                    updateReports(selectedButtons);
+                }
+            }, [sector]);
+
+            // Handler to toggle the visibility of the PDF report
+            const handleReportButtonClick = () => {
+                setShowReport(!showReport); // Toggle showReport state
+            };
+
+            // Function to update reports based on the currently selected buttons and the domain.
+            const updateReports = (selectedButtons) => {
+                let newCurrentReports = [];
+                let newCurrentReportTypes = [];
+
+                selectedButtons.forEach(button => {
+                    let reportType;
+
+                    // Decide which nationwide report to display based on the selected sector.
+                    if (button === 'nationwide') {
+                        reportType = energySectors.includes(sector) ? 'nationwideEnergy' : 'nationwideUtil';
+                    }
+                    // For the 'provinces' button, the logic is similar but for different maps.
+                    else if (button === 'provinces') {
+                        reportType = energySectors.includes(sector) ? 'provincesEnergyMap' : 'provincesUtilMap';
+                    }
+                    // For the 'sectorSentiment' button, there is no need to differentiate.
+                    else {
+                        reportType = 'sectorSentiment';
+                    }
+
+                    // Retrieve the report URL using the determined report type.
+                    const reportUrl = reportMappings[reportType];
+                    if (reportUrl) {
+                        newCurrentReports.push(reportUrl);
+                        newCurrentReportTypes.push(reportType);
+                    }
+                });
+
+                // Update state with the new reports and report types.
+                setCurrentReports(newCurrentReports);
+                setCurrentReportTypes(newCurrentReportTypes);
+            };
+
+            // Handles click events on buttons to manage their selection state and associated reports.
+            const handleButtonClick = (buttonName) => {
+                // Determine if the button is currently selected
+                const isSelected = selectedButtons.includes(buttonName);
+
+                // Create copies of the current states to modify
+                let newSelectedButtons = [...selectedButtons];
+                let newCurrentReports = [...currentReports];
+                let newCurrentReportTypes = [...currentReportTypes];
+
+                if (isSelected) {
+                    // If the button is already selected, remove it and its associated reports
+                    newSelectedButtons = newSelectedButtons.filter(item => item !== buttonName);
+                    newCurrentReports = newCurrentReports.filter((_, index) => newCurrentReportTypes[index] !== buttonName);
+                    newCurrentReportTypes = newCurrentReportTypes.filter(type => type !== buttonName);
+                } else {
+                    // If the button is not selected, add it to the selection
+                    newSelectedButtons.push(buttonName);
+                }
+
+                // Update the state with the new set of selected buttons
+                setSelectedButtons(newSelectedButtons);
+                // Call function to update reports based on the new selection,
+                // ensuring correct handling when buttons are added or removed
+                updateReports(newSelectedButtons);
+            };
 
             return (
                 // Main container for the comprehensive analysis section of the Canadian Energy Industry
@@ -560,13 +545,13 @@
                     {response && (
                         <div style={{ width: '60%', margin: 'auto' }}>
                             <textarea
-                                ref={textAreaRef} // 使用ref
+                                ref={textAreaRef} // use ref
                                 className="form-textarea mt-1 block w-full border rounded-md"
-                                rows="1" // 初始行数设置为1，以便最开始不占太多空间
+                                rows="1" // Initial row count set to 1 for compact display
                                 readOnly
                                 value={response}
                                 placeholder="Response will be shown here..."
-                                style={{ resize: 'none', overflow: 'auto' }} // 设置滚动条自动出现
+                                style={{ resize: 'none', overflow: 'auto' }} // Auto-scroll enabled
                             />
                         </div>
                     )}
@@ -590,7 +575,7 @@
                                 style={{
                                     width: currentReports.length > 0 ? '35%' : '60%',
                                     margin: currentReports.length > 0 ? '0' : 'auto',
-                                    height: `${pdfHeight}px` // 使用计算出的高度
+                                    height: `${pdfHeight}px` // Height dynamically calculated
                                 }}
                                 className={currentReports.length > 0 ? 'pdf-report-floating' : ''}
                             >
