@@ -1,0 +1,615 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canadian Energy</title>
+    <!-- Importing React and Babel for JSX support -->
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Roboto font and FontAwesome icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="/static/statistic_files/imgs/icon.webp" type="image/webp">
+    <style>
+        /* Background styling */
+        body {
+            background-image: url('/static/statistic_files/imgs/energy_img.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Prevents the background from scrolling with the content */
+            position: relative; /* Establishes a stacking context for ::before pseudo-element */
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: -1; /* Ensures overlay is below the content */
+        }
+
+        /* Editable div styling */
+        .editable-div {
+            min-height: 20px;
+            max-height: 80px;
+            overflow-y: auto; /* Allows vertical scrolling */
+            background-color: white;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 75%;
+            display: block; /* Ensures div behaves like a block element */
+            line-height: 20px;
+            word-wrap: break-word; /* Prevents long words or URLs from overflowing */
+        }
+
+        /* iFrame report styling */
+        .report-iframe {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px; /* Space below each chart */
+        }
+
+        .report-iframe iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Padding-top adjustments for reports based on aspect ratios */
+        .sentiment-report { padding-top: calc((960 / 1280) * 100%); }
+        .three-energy-report { padding-top: calc((1440 / 1280) * 100%); }
+        .three-energy-map-report { padding-top: calc((1205 / 1280) * 100%); }
+        .util-report { padding-top: calc((720 / 1280) * 100%); }
+        .UtilMap-report { padding-top: calc((1210 / 1280) * 100%); }
+
+        .form-textarea {
+            margin-bottom: 20px; /* Adjust this value as needed */
+        }
+
+        /* Remove or adjust the bottom margin of the last report to prevent excessive white space at the bottom of the page */
+        .report-iframe:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Centered text styling */
+        .text-center h1 {
+            color: #ffffff; /* White text color */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Dark shadow for better readability */
+        }
+
+        /* Floating PDF report styling */
+        .pdf-report-floating {
+            position: -webkit-sticky; /* Compatibility with Safari */
+            position: sticky;
+            top: 20px; /* Distance from the viewport top */
+            height: 500px; /* Adjust height as needed */
+            z-index: 10; /* Ensures floating above other content */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        function App() {
+            // States for user inputs and selections
+            const [query, setQuery] = React.useState(""); // Holds the input text from the user
+            const [sector, setSector] = React.useState("Coking Coal"); // Holds the selected sector
+            const [source, setSource] = React.useState("Online"); // Holds the selected source type
+            const [selectedButtons, setSelectedButtons] = React.useState([]); // Tracks selected buttons for toggling views
+
+            // States for handling responses and reports
+            const [response, setResponse] = React.useState(""); // Holds the response text
+            const [currentReports, setCurrentReports] = React.useState([]); // URLs of current reports being displayed
+            const [currentReportTypes, setCurrentReportTypes] = React.useState([]); // Types of current reports for styling purposes
+
+            // States for UI interaction and dynamic adjustments
+            const textAreaRef = React.useRef(null); // Ref for the textarea element for dynamic height adjustment
+            const [isProcessing, setIsProcessing] = React.useState(false); // Indicates if the app is processing a request
+            const [isInputEmpty, setIsInputEmpty] = React.useState(true); // Checks if the input field is empty
+            const [imageData, setImageData] = React.useState([]); // Holds image data added to the input
+
+            // Interactive UI handlers and dynamic UI adjustments
+            const [showReport, setShowReport] = React.useState(false); // Toggles the display of the PDF report
+            const [viewportHeight, setViewportHeight] = React.useState(window.innerHeight); // Stores the current viewport height
+            const topElementsHeight = 150; // Fixed height for top elements like text box, buttons, etc.
+            const pdfHeight = showReport ? viewportHeight - topElementsHeight : viewportHeight; // Calculated height for PDF report display
+            const reportWidth = currentReports.length > 0 ? '35%' : '60%'; // Calculate width for PDF report display
+
+            // Handler to adjust the height of the textarea based on content
+            const maxTextAreaHeight = 400; // Maximum height for the textarea, equivalent to 20 lines of text
+            const adjustTextAreaHeight = () => {
+                if (textAreaRef.current) {
+                    textAreaRef.current.style.height = "0px"; // Reset height to get correct scrollHeight
+                    let scrollHeight = textAreaRef.current.scrollHeight;
+                    if (scrollHeight > maxTextAreaHeight) {
+                        scrollHeight = maxTextAreaHeight; // Use max height if exceeded
+                    }
+                    textAreaRef.current.style.height = `${scrollHeight}px`; // Apply new height
+                }
+            };
+
+            // Placeholder text
+            const placeholderText = "e.g., What's the trend of the Coking Coal sector in Canada?";
+
+            // Handling click event of the editable div
+            const handleEditableDivClick = (e) => {
+                if (e.currentTarget.innerText.trim() === placeholderText) {
+                    setQuery(""); // Clear the query string in the state
+                    e.currentTarget.innerText = ""; // Clear the text in the text box
+                    e.currentTarget.style.color = "black"; // Change text color to black for user input
+                }
+            };
+
+            // Handling blur event of the editable div
+            const handleEditableDivBlur = (e) => {
+                if (!e.currentTarget.innerText.trim()) {
+                    setQuery(placeholderText); // Reset the query string in the state to placeholder text
+                    e.currentTarget.innerText = placeholderText; // Re-display the placeholder text
+                    e.currentTarget.style.color = "gray"; // Change text color to gray for placeholder text
+                }
+            };
+
+            // Modify handleInput function to handle empty input and adjust text color
+            const handleInput = (e) => {
+                const text = e.currentTarget.innerText;
+                if (text.trim() && text.trim() !== placeholderText) {
+                    setQuery(text);
+                    setIsInputEmpty(!text.trim());
+                    e.currentTarget.style.color = "black"; // Ensure text color is black for user input
+                } else {
+                    setIsInputEmpty(true);
+                    if (text.trim() === "") {
+                        e.currentTarget.innerText = placeholderText; // Display placeholder text if input is empty
+                        e.currentTarget.style.color = "gray"; // Change text color to gray for placeholder
+                        setQuery(placeholderText);
+                    }
+                }
+            };
+
+
+            // Clear response text
+            const handleClearResponse = () => setResponse("");
+
+            React.useEffect(() => {
+                // Adjust textarea height after response is rendered
+                const timer = setTimeout(() => {
+                    adjustTextAreaHeight();
+                }, 0); // Execute in the next render cycle
+                return () => clearTimeout(timer);
+            }, [response]);
+
+
+
+            // Data definitions for sectors, utilities, and report mappings
+            const energySectors = [
+                "Coking Coal", "Natural Gas", "Oil & Gas Drilling", "Oil & Gas E&P",
+                "Oil & Gas Equipment & Services", "Oil & Gas Integrated", "Oil & Gas Midstream",
+                "Oil & Gas Refining & Marketing", "Shale Oil", "Thermal Coal"
+            ];
+            const utilities = [
+                "Nuclear Power", "Solar", "Utilities - Diversified", "Utilities - Independent Power Producers",
+                "Utilities - Regulated Electric", "Utilities - Regulated Gas", "Utilities - Regulated Water",
+                "Utilities - Renewable", "Wind Power", "Hydrogen Energy"
+            ];
+            const reportMappings = {
+                'sectorSentiment': 'https://app.powerbi.com/reportEmbed?reportId=ceaf0317-b619-43fa-9e74-9a1874071a20&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'nationwideEnergy': 'https://app.powerbi.com/reportEmbed?reportId=65e93b5e-eba2-4241-b481-050dda341dba&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'nationwideUtil': 'https://app.powerbi.com/reportEmbed?reportId=4b986cd7-ddc9-405a-aa4f-838ec7f9231c&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'provincesEnergyMap': 'https://app.powerbi.com/reportEmbed?reportId=6c08c9dc-1138-4a67-aa3f-db153bb2f2b7&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+                'provincesUtilMap': 'https://app.powerbi.com/reportEmbed?reportId=c9f9017e-6d50-4d60-8a74-0a3f15d51e40&autoAuth=true&ctid=60409c15-dd37-4640-975b-9eaa707437b7',
+            };
+            // Styling for different types of reports
+            const reportStyles = {
+                'sectorSentiment': 'sentiment-report',
+                'nationwideEnergy': 'three-energy-report',
+                'nationwideUtil': 'util-report',
+                'provincesEnergyMap': 'three-energy-map-report',
+                'provincesUtilMap': 'UtilMap-report',
+            };
+
+
+
+            // Handler to toggle the visibility of the PDF report
+            const handleReportButtonClick = () => {
+                setShowReport(!showReport); // Toggle showReport state
+            };
+
+
+            // Effects for dynamic adjustments and data updates
+            React.useEffect(() => {
+                if (selectedButtons.includes('nationwide') || selectedButtons.includes('provinces')) {
+                    updateReports(selectedButtons);
+                }
+            }, [sector]);
+
+
+            // Handles click events on buttons to manage their selection state and associated reports.
+            const handleButtonClick = (buttonName) => {
+                // Determine if the button is currently selected
+                const isSelected = selectedButtons.includes(buttonName);
+
+                // Create copies of the current states to modify
+                let newSelectedButtons = [...selectedButtons];
+                let newCurrentReports = [...currentReports];
+                let newCurrentReportTypes = [...currentReportTypes];
+
+                if (isSelected) {
+                    // If the button is already selected, remove it and its associated reports
+                    newSelectedButtons = newSelectedButtons.filter(item => item !== buttonName);
+                    newCurrentReports = newCurrentReports.filter((_, index) => newCurrentReportTypes[index] !== buttonName);
+                    newCurrentReportTypes = newCurrentReportTypes.filter(type => type !== buttonName);
+                } else {
+                    // If the button is not selected, add it to the selection
+                    newSelectedButtons.push(buttonName);
+                }
+
+                // Update the state with the new set of selected buttons
+                setSelectedButtons(newSelectedButtons);
+                // Call function to update reports based on the new selection,
+                // ensuring correct handling when buttons are added or removed
+                updateReports(newSelectedButtons);
+            };
+
+
+
+
+            // Function to update reports based on the currently selected buttons and the domain.
+            const updateReports = (selectedButtons) => {
+                let newCurrentReports = [];
+                let newCurrentReportTypes = [];
+
+                selectedButtons.forEach(button => {
+                    let reportType;
+
+                    // Decide which nationwide report to display based on the selected sector.
+                    if (button === 'nationwide') {
+                        reportType = energySectors.includes(sector) ? 'nationwideEnergy' : 'nationwideUtil';
+                    }
+                    // For the 'provinces' button, the logic is similar but for different maps.
+                    else if (button === 'provinces') {
+                        reportType = energySectors.includes(sector) ? 'provincesEnergyMap' : 'provincesUtilMap';
+                    }
+                    // For the 'sectorSentiment' button, there is no need to differentiate.
+                    else {
+                        reportType = 'sectorSentiment';
+                    }
+
+                    // Retrieve the report URL using the determined report type.
+                    const reportUrl = reportMappings[reportType];
+                    if (reportUrl) {
+                        newCurrentReports.push(reportUrl);
+                        newCurrentReportTypes.push(reportType);
+                    }
+                });
+
+                // Update state with the new reports and report types.
+                setCurrentReports(newCurrentReports);
+                setCurrentReportTypes(newCurrentReportTypes);
+            };
+
+
+
+
+            // Start indicator for processing requests
+            const startProcessingIndicator = () => {
+                let dots = 0;
+                const maxDots = 5;
+                return setInterval(() => {
+                    let dotsText = '.'.repeat(dots % (maxDots + 1));
+                    setResponse(`Processing your request${dotsText}`);
+                    dots++;
+                }, 500);
+            };
+
+            // Simulate typing effect for responses
+            const simulateTypingEffect = (fullResponse, callback) => {
+                let currentCharIndex = 0;
+                const typeNextChars = () => {
+                    const charsToAdd = Math.min(fullResponse.length - currentCharIndex, 1 + Math.floor(Math.random() * 5));
+                    let currentDisplayText = fullResponse.substring(0, currentCharIndex + charsToAdd);
+                    setResponse(currentDisplayText);
+                    currentCharIndex += charsToAdd;
+                    if (currentCharIndex < fullResponse.length) {
+                        setTimeout(typeNextChars, 5 + Math.random() * 10);
+                    } else {
+                        callback && callback();
+                    }
+                };
+                typeNextChars();
+            };
+
+
+
+
+            // Function to handle submissions and simulate typing with a dynamic processing indicator.
+            const handleAsk = async () => {
+                // Disable button at the start of the request
+                setIsProcessing(true);
+
+                // Check if the input box is empty, and if there's no image, use default text
+                const effectiveQuery = isInputEmpty && imageData.length === 0 ? "" : query;
+
+                // Log source and sector for debugging purposes
+                console.log(source);
+                console.log(sector);
+
+                // Start the processing indicator
+                const processingInterval = startProcessingIndicator();
+
+                try {
+                    // Make a POST request to the backend
+                    const response = await fetch('http://127.0.0.1:8000/ask', { // Replace with your backend URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: effectiveQuery,
+                            sector,
+                            source,
+                            images: imageData,
+                        }),
+                    });
+
+                    // Check if the response is not okay
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // Process the JSON response
+                    const data = await response.json();
+                    // Stop the processing indicator
+                    clearInterval(processingInterval);
+
+                    // Simulate typing effect with the fetched data
+                    simulateTypingEffect(data.response, () => setIsProcessing(false));
+                } catch (error) {
+                    // Log error to console
+                    console.error('There was a problem with the fetch operation:', error);
+                    // Ensure the processing interval is cleared on error
+                    clearInterval(processingInterval);
+
+                    // Update the response state to reflect the error
+                    setResponse("Failed to process your request. Please try again.");
+                    // Reset button state in case of error
+                    setIsProcessing(false);
+                }
+            };
+
+
+            const handlePaste = (e) => {
+                e.preventDefault();
+                const items = (e.clipboardData || window.clipboardData).items;
+                let found = false;
+
+                for (const item of items) {
+                    if (item.type.indexOf("image") >= 0) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = document.createElement("img");
+                            img.src = event.target.result;
+                            img.style.height = "20px"; // Set image height to match text height, adjust based on actual line height
+                            img.style.marginLeft = "5px";
+                            img.style.marginRight = "5px"; // Add some margin on the right for spacing between images
+                            img.style.display = "inline-block"; // Ensure images are displayed inline
+
+                            const editableDiv = document.querySelector('.editable-div');
+                            editableDiv.appendChild(img); // Directly add the image, as all images should be displayed inline
+
+                            setIsInputEmpty(false); // Update state to not empty
+                            // Continue the loop to handle all images in clipboard
+                            setImageData(prevImageData => [...prevImageData, event.target.result]);
+                        };
+                        reader.readAsDataURL(blob);
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    // If not an image, process text paste
+                    const text = e.clipboardData.getData('text/plain');
+                    document.execCommand("insertText", false, text);
+                    setIsInputEmpty(!text.trim()); // Update the isInputEmpty state based on input content
+                }
+            };
+
+
+            // Handle image drop
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            console.log(event.target.result); // Example action: log the image data URL
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            };
+
+
+            const handleKeyDown = (e) => {
+                // Handle key events for 'Enter' and deletion keys
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    document.querySelector('.ask-button').click();
+                } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                    setTimeout(() => {
+                        const imagesInContent = document.querySelectorAll('.editable-div img');
+                        const newImageData = Array.from(imagesInContent).map(img => img.src);
+                        setImageData(newImageData);
+                        const text = e.currentTarget.textContent;
+                        setIsInputEmpty(!text.trim());
+                    }, 0);
+                }
+            };
+
+
+
+            const insertNewLineAtCursor = () => {
+                // Insert a new line at the cursor position within an editable content area
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                const lineBreak = document.createElement('br');
+                range.insertNode(lineBreak);
+                range.setStartAfter(lineBreak);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            };
+
+
+            return (
+                // Main container for the comprehensive analysis section of the Canadian Energy Industry
+                <div className="min-h-screen">
+                    <div className="text-center pt-12 pb-8">
+                        <h1 className="text-4xl text-white font-bold">Comprehensive Analysis of the Canadian Energy Industry</h1>
+                    </div>
+
+                    {/* Stats display for sectors, companies, news, and models */}
+                    <div className="flex justify-center space-x-4 mb-8">
+                        <div className="bg-white p-4 rounded-full shadow-lg">
+                            <span className="text-blue-600"><i className="fas fa-globe-americas"></i> 20 Sectors</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-full shadow-lg">
+                            <span className="text-blue-600"><i className="fas fa-building"></i> 400+ Companies</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-full shadow-lg">
+                            <span className="text-blue-600"><i className="fas fa-newspaper"></i> 60,000+ News</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-full shadow-lg">
+                            <span className="text-blue-600"><i className="fas fa-brain"></i> 10+ Statistical/ML/AI Models</span>
+                        </div>
+                    </div>
+
+                    {/* Navigation buttons for different analysis sections */}
+                    <div className="flex justify-center mb-8">
+                        <button className={`px-6 py-2 rounded-l ${selectedButtons.includes('sectorSentiment') ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`} onClick={() => handleButtonClick('sectorSentiment')}>Canada Sector Sentiment</button>
+                        <button className={`px-6 py-2 ${selectedButtons.includes('nationwide') ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`} onClick={() => handleButtonClick('nationwide')}>Canada Nationwide</button>
+                        <button className={`px-6 py-2 rounded-r ${selectedButtons.includes('provinces') ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`} onClick={() => handleButtonClick('provinces')}>Canada Provinces</button>
+                        <button className={`px-6 py-2 rounded ${showReport ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`} onClick={handleReportButtonClick}>Report</button>
+                    </div>
+
+                    <div className="flex justify-center mb-12">
+                        <div
+                            contentEditable="true"
+                            className="editable-div rounded-l px-4 py-2 w-1/4 border border-gray-300"
+                            onClick={handleEditableDivClick}
+                            onBlur={handleEditableDivBlur}
+                            onInput={handleInput}
+                            onPaste={handlePaste}
+                            onDrop={handleDrop}
+                            onKeyDown={handleKeyDown}
+                            style={{ color: 'gray' }} // Set initial text color to gray
+                            suppressContentEditableWarning={true}
+                        >
+                            {placeholderText}
+                        </div>
+
+
+                        <select className="px-4 py-2 w-1/8 border-t border-b" value={sector} onChange={(e) => setSector(e.target.value)}>
+                            <option value="Coking Coal">Coking Coal</option>
+                            <option value="Hydrogen Energy">Hydrogen Energy</option>
+                            <option value="Natural Gas">Natural Gas</option>
+                            <option value="Nuclear Power">Nuclear Power</option>
+                            <option value="Oil & Gas Drilling">Oil & Gas Drilling</option>
+                            <option value="Oil & Gas E&P">Oil & Gas E&P</option>
+                            <option value="Oil & Gas Equipment & Services">Oil & Gas Equipment & Services</option>
+                            <option value="Oil & Gas Integrated">Oil & Gas Integrated</option>
+                            <option value="Oil & Gas Midstream">Oil & Gas Midstream</option>
+                            <option value="Oil & Gas Refining & Marketing">Oil & Gas Refining & Marketing</option>
+                            <option value="Shale Oil">Shale Oil</option>
+                            <option value="Solar">Solar</option>
+                            <option value="Thermal Coal">Thermal Coal</option>
+                            <option value="Utilities - Diversified">Utilities - Diversified</option>
+                            <option value="Utilities - Independent Power Producers">Utilities - Independent Power Producers</option>
+                            <option value="Utilities - Regulated Electric">Utilities - Regulated Electric</option>
+                            <option value="Utilities - Regulated Gas">Utilities - Regulated Gas</option>
+                            <option value="Utilities - Regulated Water">Utilities - Regulated Water</option>
+                            <option value="Utilities - Renewable">Utilities - Renewable</option>
+                            <option value="Wind Power">Wind Power</option>
+                        </select>
+                        <select className="px-4 py-2 w-1/8 border-t border-b" value={source} onChange={(e) => setSource(e.target.value)}>
+                            <option value="Online">Online</option>
+                            <option value="Document">Document</option>
+                        </select>
+                        <button className={`bg-blue-500 text-white px-6 py-2 rounded-r mr-2 ${isProcessing ? 'bg-gray-500' : 'bg-blue-500'} ask-button`} onClick={handleAsk} disabled={isProcessing}>Ask</button>
+                        <button className={`bg-blue-500 text-white px-6 py-2 rounded ${isProcessing ? 'bg-gray-500' : 'bg-blue-500'}`} onClick={handleClearResponse} disabled={isProcessing}>Clear</button>
+
+                    </div>
+                    {response && (
+                        <div style={{ width: '60%', margin: 'auto' }}>
+                            <textarea
+                                ref={textAreaRef} // 使用ref
+                                className="form-textarea mt-1 block w-full border rounded-md"
+                                rows="1" // 初始行数设置为1，以便最开始不占太多空间
+                                readOnly
+                                value={response}
+                                placeholder="Response will be shown here..."
+                                style={{ resize: 'none', overflow: 'auto' }} // 设置滚动条自动出现
+                            />
+                        </div>
+                    )}
+
+                    {/* 新的布局容器 */}
+                    {/* 修改后的外层布局容器 */}
+                    <div className="flex justify-center mb-12" style={{ width: '100%' }}>
+                        {/* 报告部分 */}
+                        {currentReports.length > 0 && (
+                            <div style={{ width: showReport ? '60%' : '60%', margin: 'auto' }}>
+                                {currentReports.map((report, index) => (
+                                    <div key={index} className={`report-iframe ${reportStyles[currentReportTypes[index]] || ''}`}>
+                                        <iframe title={`Report ${index}`} src={report} frameBorder="0" allowFullScreen={true}></iframe>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* PDF报告部分 */}
+                        {showReport && (
+                            <div
+                                style={{
+                                    width: currentReports.length > 0 ? '35%' : '60%',
+                                    margin: currentReports.length > 0 ? '0' : 'auto',
+                                    height: `${pdfHeight}px` // 使用计算出的高度
+                                }}
+                                className={currentReports.length > 0 ? 'pdf-report-floating' : ''}
+                            >
+                                <iframe src="/static/statistic_files/Reports.pdf" frameBorder="0" style={{ width: '100%', height: '100%' }}></iframe>
+                            </div>
+                        )}
+
+
+                    </div>
+
+
+
+                </div>
+            );
+
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('app'));
+        root.render(<App />);
+    </script>
+
+</body>
+</html>
