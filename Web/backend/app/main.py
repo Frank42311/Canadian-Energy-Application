@@ -28,7 +28,7 @@ nltk.download('stopwords')
 app = FastAPI()
 
 # Serve static files from the 'frontend' directory
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
@@ -39,7 +39,7 @@ async def read_root():
     Returns:
     HTMLResponse: The HTML content of the main page loaded from a file, along with a 200 OK status code.
     """
-    with open(Path('../frontend/frontend.html'), 'r', encoding='utf-8') as html_file:
+    with open(Path('frontend/frontend.html'), 'r', encoding='utf-8') as html_file:
         return HTMLResponse(content=html_file.read(), status_code=200)
 
 """
