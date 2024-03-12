@@ -391,9 +391,6 @@ async def ask_gpt(item: QueryItem):
         raise HTTPException(status_code=400, detail="Failed to get final response")
 
 
-
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
