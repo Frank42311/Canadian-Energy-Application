@@ -28,7 +28,7 @@ nltk.download('stopwords')
 app = FastAPI()
 
 # Serve static files from the 'frontend' directory
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+app.mount("/static", StaticFiles(directory="app/frontend"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
@@ -39,7 +39,7 @@ async def read_root():
     Returns:
     HTMLResponse: The HTML content of the main page loaded from a file, along with a 200 OK status code.
     """
-    with open(Path('frontend/frontend.html'), 'r', encoding='utf-8') as html_file:
+    with open(Path('app/frontend/frontend.html'), 'r', encoding='utf-8') as html_file:
         return HTMLResponse(content=html_file.read(), status_code=200)
 
 """
@@ -49,7 +49,7 @@ The API key is read from a text file located at '../../gpt_api/api_key.txt'.
 This key is used to authenticate requests to the OpenAI API, enabling access to models like GPT-4.
 """
 # Setup OpenAI API
-api_key_file_path = 'gpt_api/api_key.txt'
+api_key_file_path = 'app/gpt_api/api_key.txt'
 with open(api_key_file_path, 'r') as file:
     api_key = file.read().strip()
 client = OpenAI(api_key=api_key)
