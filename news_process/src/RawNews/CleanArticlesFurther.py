@@ -5,19 +5,6 @@ import numpy as np
 
 def filter_length(content: str) -> str:
     """
-    Filters out content whose length does not meet specified conditions.
-
-    Parameters:
-    - content: str, the content to be filtered.
-
-    Returns:
-    - The original content if its length is between 200 and 30000 characters, inclusive; otherwise, np.nan.
-    """
-    length = len(str(content))
-    return content if 200 <= length <= 30000 else np.nan
-
-
-    """
     Removes specific strings from the content.
 
     If the content contains any of the targeted strings (e.g., "cookie", "login"),
@@ -29,6 +16,9 @@ def filter_length(content: str) -> str:
     Returns:
     - The content with specified strings removed. If the content is NaN, it returns NaN.
     """
+    length = len(str(content))
+    return content if 200 <= length <= 30000 else np.nan
+
     if pd.isna(content):
         return content
     for string in ["cookie", " login ", " log in ", "register for free"]:
