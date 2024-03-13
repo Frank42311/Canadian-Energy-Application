@@ -1,0 +1,65 @@
+{
+    "Coking Coal": [
+        "Coal"
+    ],
+    "Hydrogen Energy": [
+        "Hydrogen"
+    ],
+    "Natural Gas": [
+        "Gas"
+    ],
+    "Nuclear Power": [
+        "Nuclear"
+    ],
+    "Oil & Gas Drilling": [
+        "Drilling"
+    ],
+    "Oil & Gas E&P": [
+        "exploration",
+	"production"
+    ],
+    "Oil & Gas Equipment & Services": [
+        "Equipment",
+	"Services"
+    ],
+    "Oil & Gas Integrated": [
+	""
+    ],
+    "Oil & Gas Midstream": [
+        ""
+    ],
+    "Oil & Gas Refining & Marketing": [
+        "Refining",
+	"Marketing"
+    ],
+    "Shale Oil": [
+        "Shale"
+    ],
+    "Solar": [
+        "Solar"
+    ],
+    "Thermal Coal": [
+        "Coal"
+    ],
+    "Utilities - Diversified": [
+        ""
+    ],
+    "Utilities - Independent Power Producers": [
+        ""
+    ],
+    "Utilities - Regulated Electric": [
+        "Electric"
+    ],
+    "Utilities - Regulated Gas": [
+        "Gas"
+    ],
+    "Utilities - Regulated Water": [
+        "Water"
+    ],
+    "Utilities - Renewable": [
+        "Renewable"
+    ],
+    "Wind Power": [
+        "Wind"
+    ]
+}
