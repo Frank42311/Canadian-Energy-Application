@@ -80,3 +80,12 @@ paths_and_params = [
 # Execute predictions
 for file_path, save_path, group_columns, *filter_condition in paths_and_params:
     prepare_and_predict(Path(file_path), Path(save_path), group_columns, *filter_condition)
+
+
+"Modify coal_coke Table for Power BI visualization"
+file_path = "data/statistical_tables_updated/coal_coke.csv"
+data = pd.read_csv(file_path)
+data_duplicated = data.copy()
+data_duplicated['GEO'] = 'Ontario'
+final_data = pd.concat([data, data_duplicated])
+final_data.to_csv(file_path, index=False)
