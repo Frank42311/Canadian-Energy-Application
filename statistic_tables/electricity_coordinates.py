@@ -1,8 +1,9 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+from typing import Tuple
 
-def load_dataframes(generation_path, coordinates_path) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_dataframes(generation_path, coordinates_path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Loads the electric power generation data and geographic coordinates data into pandas DataFrames.
     """
