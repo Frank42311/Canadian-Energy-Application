@@ -6,37 +6,37 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle
 
 # Ensure necessary NLTK downloads
-def download_nltk_data():
+def download_nltk_data() -> None:
     nltk.download('punkt')
     nltk.download('stopwords')
 
 # Load the dataset
-def load_dataset(filepath):
+def load_dataset(filepath) -> pd.DataFrame:
     return pd.read_csv(filepath, encoding='utf-8')
 
 # Preprocess a single document
-def preprocess(text):
+def preprocess(text) -> str:
     stop_words = set(stopwords.words('english'))
     words = word_tokenize(text)
     filtered_text = [word for word in words if word.isalnum() and not word in stop_words]
     return ' '.join(filtered_text)
 
 # Apply preprocessing to all documents
-def preprocess_documents(documents):
+def preprocess_documents(documents) -> list:
     return [preprocess(doc) for doc in documents]
 
 # Build the TF-IDF matrix
-def build_tfidf_matrix(documents):
+def build_tfidf_matrix(documents) -> (TfidfVectorizer, 'sparse matrix'):
     vectorizer = TfidfVectorizer()
     return vectorizer, vectorizer.fit_transform(documents)
 
 # Save data using pickle
-def save_data(filepath, data):
+def save_data(filepath, data) -> None:
     with open(filepath, 'wb') as file:
         pickle.dump(data, file)
 
 # Helper function to aggregate sector summaries and trends
-def aggregate_sector_data(local_doc):
+def aggregate_sector_data(local_doc) -> list:
     sector_documents = []
 
     # Add sector summaries by year and sector
@@ -52,7 +52,7 @@ def aggregate_sector_data(local_doc):
     return sector_documents
 
 # Main function to orchestrate the processing pipeline
-def main():
+def main() -> None:
     download_nltk_data()
 
     dataset_path = './data/final.csv'
