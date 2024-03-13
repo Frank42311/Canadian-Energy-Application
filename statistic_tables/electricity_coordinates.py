@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from typing import Tuple
 
-def load_dataframes(generation_path, coordinates_path) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_dataframes(generation_path: str, coordinates_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Loads the electric power generation data and geographic coordinates data into pandas DataFrames.
     """
@@ -11,7 +11,7 @@ def load_dataframes(generation_path, coordinates_path) -> Tuple[pd.DataFrame, pd
     GEO_coor_df = pd.read_csv(coordinates_path)
     return ele_gen_df, GEO_coor_df
 
-def merge_dataframes(ele_gen_df, GEO_coor_df) -> pd.DataFrame:
+def merge_dataframes(ele_gen_df: pd.DataFrame, GEO_coor_df: pd.DataFrame) -> pd.DataFrame:
     """
     Merges the electric power generation dataframe with the geographic coordinates dataframe on the 'GEO' column.
     Adds 'longitude' and 'latitude' columns to the electric power generation dataframe.
@@ -19,7 +19,7 @@ def merge_dataframes(ele_gen_df, GEO_coor_df) -> pd.DataFrame:
     merged_df = pd.merge(ele_gen_df, GEO_coor_df[['GEO', 'Latitude', 'Longitude']], on='GEO', how='left')
     return merged_df
 
-def create_GEO2_column(merged_df) -> pd.DataFrame:
+def create_GEO2_column(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     Creates a new column 'GEO2' with specified replacements to update regional names.
     """
@@ -34,7 +34,7 @@ def create_GEO2_column(merged_df) -> pd.DataFrame:
     merged_df['GEO2'] = merged_df['GEO'].replace(replacements)
     return merged_df
 
-def update_average_coordinates(merged_df) -> pd.DataFrame:
+def update_average_coordinates(merged_df: pd.DataFrame) -> pd.DataFrame:
     """
     Updates the latitude and longitude of 'Northern Territories' and 'Atlantic Provinces' with their average values.
     """
@@ -45,7 +45,7 @@ def update_average_coordinates(merged_df) -> pd.DataFrame:
     merged_df.loc[merged_df['GEO2'] == 'Atlantic Provinces', ['Latitude', 'Longitude']] = atlantic_avg.values
     return merged_df
 
-def offset_coordinates_by_generation_type(merged_df, radius_offset=2) -> pd.DataFrame:
+def offset_coordinates_by_generation_type(merged_df: pd.DataFrame, radius_offset: float = 2) -> pd.DataFrame:
     """
     Offsets the latitude and longitude coordinates based on the generation type and geographical location.
     """

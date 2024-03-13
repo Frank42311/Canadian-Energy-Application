@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import pmdarima as pm
 
-def prepare_and_predict(file_path, save_path, group_columns, filter_conditions=None, start_date='2016-01-01',
+def prepare_and_predict(file_path: Path, save_path: Path, group_columns: list, filter_conditions=None, start_date='2016-01-01',
                         end_date='2023-10-31') -> None:
     """
     General function for data preparation and prediction.

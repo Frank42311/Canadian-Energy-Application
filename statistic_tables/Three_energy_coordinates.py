@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+from typing import Tuple
 
-def process_energy_df(df, energy_type):
+def process_energy_df(df: pd.DataFrame, energy_type: str) -> pd.DataFrame:
     """
     Process the energy DataFrame by selecting specific columns, prefixing the 'Supply and disposition' values,
     replacing NaN in 'VALUE' with 0, and adding new rows for energy input and output in MJ.
@@ -56,7 +57,7 @@ def process_energy_df(df, energy_type):
 
     return df
 
-def calculate_energy_io(group, energy_type, conversion_factor):
+def calculate_energy_io(group: pd.DataFrame, energy_type: str, conversion_factor: float) -> Tuple[float, float]:
     """
     Calculate input and output energy values for Gas and Crude.
 
@@ -94,7 +95,7 @@ def calculate_energy_io(group, energy_type, conversion_factor):
 
     return input_value, output_value
 
-def calculate_coal_io(group, coal_coke_factor, coal_factor):
+def calculate_coal_io(group: pd.DataFrame, coal_coke_factor: float, coal_factor: float) -> Tuple[float, float]:
     """
     Calculate input and output energy values for Coal.
 
@@ -130,7 +131,7 @@ def calculate_coal_io(group, coal_coke_factor, coal_factor):
 
     return input_value, output_value
 
-def create_io_rows(ref_date, geo, energy_type, input_output_values):
+def create_io_rows(ref_date: str, geo: str, energy_type: str, input_output_values: Tuple[float, float]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Create new DataFrame rows for energy input and output values.
 
@@ -152,7 +153,7 @@ def create_io_rows(ref_date, geo, energy_type, input_output_values):
                                     'VALUE': output_value}])
     return new_input_row, new_output_row
 
-def merge_and_adjust_coordinates(final_df, GEO_coor_df, radius_offset=2):
+def merge_and_adjust_coordinates(final_df: pd.DataFrame, GEO_coor_df: pd.DataFrame, radius_offset: float = 2) -> pd.DataFrame:
     """
     Merge the final DataFrame with GEO coordinates and adjust locations for visualization.
 
@@ -190,7 +191,7 @@ def merge_and_adjust_coordinates(final_df, GEO_coor_df, radius_offset=2):
 
     return merged_df
 
-def offset_coordinates(merged_df, radius_offset):
+def offset_coordinates(merged_df: pd.DataFrame, radius_offset: float) -> None:
     """
     Offset the coordinates of energy types for clearer visualization.
 
@@ -215,7 +216,7 @@ def offset_coordinates(merged_df, radius_offset):
                 merged_df.loc[condition, 'Latitude'] += delta_lat
                 merged_df.loc[condition, 'Longitude'] += delta_lon
 
-def main():
+def main() -> None:
     # Load data
     coal_df = pd.read_csv('data/statistical_tables_updated/coal_coke.csv', encoding='utf-8', low_memory=False)
     crude_df = pd.read_csv('data/statistical_tables_updated/crude_oil.csv', encoding='utf-8', low_memory=False)
