@@ -2,7 +2,7 @@ This is an intelligent web analysis tool integrated with multimodal AI technolog
 
 Algorithms: The project utilizes several key algorithms such as KeyBERT, FinancialBERT-Sentiment-Analysis, bart-large-cnn, facebook/bart-base, gpt-3.5-1106, and gpt-4, llama2-7B, SARIMA for various purposes including keyword extraction, sentiment analysis, summarization, and more.
 
-The requirements directory at the root contains the Conda environment necessary to run the entire project.
+The requirements.txt at the root contains the Conda environment necessary to run the entire project.
 
 Under the news_process directory, you'll find scripts for crawling, cleaning, summarizing, and computing keywords for news data.
 
