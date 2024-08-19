@@ -8,7 +8,7 @@ Under the news_process directory, you'll find scripts for crawling, cleaning, su
 
 The statistic_tables directory is dedicated to cleaning and integrating statistical tables, making them ready for presentation in Power BI.
 
-For samples of completed works, you can visit the powerbi_reports, reports, and video directories. Additional resources and examples of deep learning applications can be found at https://www.frank42311.ca/post/deep-learning.
+For samples of completed works, you can visit the powerbi_reports, reports, and video directories. Details in ./video.
 
 The contents under the Web directory comprise the complete code for the web application, which is also equipped with a separate Docker environment. This can be accessed by pulling fuwanghe/canadian_energy:v1.2.
 
